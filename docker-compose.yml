@@ -1,0 +1,56 @@
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    networks:
+      - app_network
+    expose:
+      - 3000
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=db
+      - DB_USER=velo
+      - DB_PASSWORD=velopassword
+      - DB_NAME=velo
+      - JWT_SECRET=velo_super_secret_key_change_in_production
+      - PORT=3000
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    networks:
+      - app_network
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=velo
+      - MYSQL_USER=velo
+      - MYSQL_PASSWORD=velopassword
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
+
+  caddy:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - app_network
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  app_network:
+    driver: bridge

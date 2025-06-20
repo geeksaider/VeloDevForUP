@@ -1,0 +1,15 @@
+http://localhost {
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy backend:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+
+    route {
+        root * /app/client
+        try_files {path} index.html
+        file_server
+    }
+}
